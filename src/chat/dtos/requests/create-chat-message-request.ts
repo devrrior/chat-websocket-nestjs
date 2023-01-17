@@ -8,4 +8,8 @@ export class CreateChatMessageRequest {
   @IsNotEmpty()
   @IsString()
   author: string;
+
+  @IsNotEmpty()
+  @IsString()
+  roomId: string;
 }

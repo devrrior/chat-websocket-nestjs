@@ -1,5 +1,5 @@
 export enum Event {
-  getMessage = 'event_getMessage',
+  getMessage = 'event_get_message',
   onException = 'onException',
   sendMessage = 'event_send_message',
   joinRoom = 'event_join_room',
