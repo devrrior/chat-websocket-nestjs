@@ -15,6 +15,9 @@ import { JoinRoomEventRequest } from './dtos/requests/join-room-event-request';
 import { LeaveRoomEventRequest } from './dtos/requests/leave-room-event-request';
 
 @WebSocketGateway({
+  cors: {
+    origin: '*',
+  },
   namespace: '/chat',
 })
 @UseFilters(new WebsocketExceptionFilter())
