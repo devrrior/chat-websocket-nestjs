@@ -1,8 +1,6 @@
 import {
   ConnectedSocket,
   MessageBody,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -11,7 +9,10 @@ import { Server, Socket } from 'socket.io';
 import { Event } from './constants/event';
 import { UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
 import { WebsocketExceptionFilter } from './exceptions/websocket-exception.filter';
-import { ChatMessage } from './dtos/chat-message';
+import { CreateChatMessageRequest } from './dtos/requests/create-chat-message-request';
+import { ChatService } from './chat.service';
+import JoinRoomEventRequest from './dtos/requests/join-room-event-request';
+import LeaveRoomEventRequest from './dtos/requests/leave-room-event-request';
 
 @WebSocketGateway({
   cors: {
@@ -20,29 +21,46 @@ import { ChatMessage } from './dtos/chat-message';
   namespace: '/chat',
 })
 @UseFilters(new WebsocketExceptionFilter())
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class ChatGateway {
+  constructor(private readonly service: ChatService) {}
+
   @WebSocketServer()
   server: Server;
 
-  @SubscribeMessage('event_message')
+  @SubscribeMessage(Event.sendMessage)
   @UsePipes(new ValidationPipe())
-  handleNewMessage(
+  async handleNewMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() chatMessageEvent: ChatMessage,
-  ): void {
+    @MessageBody() request: CreateChatMessageRequest,
+  ): Promise<void> {
     const roomId = client.handshake.query.roomId;
+    const createChatMessageResponse = await this.service.create(
+      request.message,
+      request.author,
+      <string>roomId,
+    );
     this.server
       .to(`room_${roomId}`)
-      .emit(Event.onMessage, JSON.stringify(chatMessageEvent));
+      .emit(Event.getMessage, JSON.stringify(createChatMessageResponse));
   }
 
-  handleConnection(client: Socket): void {
-    const roomId = client.handshake.query.roomId;
-    client.join(`room_${roomId}`);
+  @SubscribeMessage(Event.joinRoom)
+  @UsePipes(new ValidationPipe())
+  async joinRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() request: JoinRoomEventRequest,
+  ) {
+    const roomId = `room_${request.roomId}`;
+    client.join(roomId);
   }
 
-  handleDisconnect(client: Socket): void {
-    const roomId = client.handshake.query.roomId;
-    client.leave(`room_${roomId}`);
+  @SubscribeMessage(Event.leaveRoom)
+  @UsePipes(new ValidationPipe())
+  async leaveRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() request: LeaveRoomEventRequest,
+  ) {
+    const roomId = `room_${request.roomId}`;
+    client.leave(roomId);
   }
 }

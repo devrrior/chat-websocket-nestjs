@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class ChatMessage {
+export class CreateChatMessageRequest {
   @IsNotEmpty()
   @IsString()
   message: string;
