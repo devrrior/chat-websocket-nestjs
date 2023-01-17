@@ -24,14 +24,21 @@ export class ChatService {
   }
 
   async getAll(): Promise<GetChatMessageResponse[]> {
-    const chatMessageEntities = await this.repository.find();
+    const chatMessageEntities = await this.repository.find({
+      order: {
+        createdAt: 'DESC',
+      },
+    });
     return chatMessageEntities.map((chatMessageEntity) =>
       this.toGetChatMessageResponse(chatMessageEntity),
     );
   }
 
   async getAllByRoomId(roomId: string): Promise<GetChatMessageResponse[]> {
-    const chatMessageEntities = await this.repository.findBy({ roomId });
+    const chatMessageEntities = await this.repository.find({
+      where: { roomId },
+      order: { createdAt: 'DESC' },
+    });
     return chatMessageEntities.map((chatMessageEntity) =>
       this.toGetChatMessageResponse(chatMessageEntity),
     );

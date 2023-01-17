@@ -6,7 +6,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Event } from './constants/event';
+import { SocketEvent } from './constants/socketEvent';
 import { UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
 import { WebsocketExceptionFilter } from './exceptions/websocket-exception.filter';
 import { CreateChatMessageRequest } from './dtos/requests/create-chat-message-request';
@@ -27,7 +27,7 @@ export class ChatGateway {
   @WebSocketServer()
   server: Server;
 
-  @SubscribeMessage(Event.sendMessage)
+  @SubscribeMessage(SocketEvent.sendMessage)
   @UsePipes(new ValidationPipe())
   async handleNewMessage(
     @ConnectedSocket() client: Socket,
@@ -42,10 +42,10 @@ export class ChatGateway {
     console.log('sendMessage');
     this.server
       .to(`room_${roomId}`)
-      .emit(Event.getMessage, JSON.stringify(createChatMessageResponse));
+      .emit(SocketEvent.getMessage, JSON.stringify(createChatMessageResponse));
   }
 
-  @SubscribeMessage(Event.joinRoom)
+  @SubscribeMessage(SocketEvent.joinRoom)
   @UsePipes(new ValidationPipe())
   async joinRoom(
     @ConnectedSocket() client: Socket,
@@ -55,7 +55,7 @@ export class ChatGateway {
     client.join(roomId);
   }
 
-  @SubscribeMessage(Event.leaveRoom)
+  @SubscribeMessage(SocketEvent.leaveRoom)
   @UsePipes(new ValidationPipe())
   async leaveRoom(
     @ConnectedSocket() client: Socket,

@@ -1,4 +1,4 @@
-export enum Event {
+export enum SocketEvent {
   getMessage = 'event_get_message',
   onException = 'onException',
   sendMessage = 'event_send_message',
