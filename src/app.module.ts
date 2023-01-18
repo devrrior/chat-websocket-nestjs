@@ -1,21 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ChatModule } from './chat/chat.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ChatMessageEntity } from './chat/chat-message.entity';
+import { GeneralConfigModule } from './config/general-config.module';
+import { DatabaseModule } from './config/database.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'localhost',
-      port: 3306,
-      username: 'root',
-      password: '',
-      database: 'chat_message_nestjs',
-      entities: [ChatMessageEntity],
-      synchronize: true,
-    }),
-    ChatModule,
-  ],
+  imports: [GeneralConfigModule, DatabaseModule, ChatModule],
 })
 export class AppModule {}
