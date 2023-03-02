@@ -1,21 +1,13 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 import { MessageType } from '../../constants/messageType';
 
-export class CreateChatMessageRequest {
-  @IsNotEmpty()
-  @IsString()
-  message: string;
+export class CreateFileMessageRequest {
+  file: any;
 
-  @IsNotEmpty()
-  @IsString()
   author: string;
 
-  @IsNotEmpty()
-  @IsString()
   roomId: string;
 
-  @IsNotEmpty()
-  @IsString()
   createdAt: Date;
 
   type: MessageType;

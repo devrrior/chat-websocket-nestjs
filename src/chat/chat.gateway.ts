@@ -14,7 +14,9 @@ import { JoinRoomEventRequest } from './dtos/requests/join-room-event-request';
 import { LeaveRoomEventRequest } from './dtos/requests/leave-room-event-request';
 import { NotificationMessage } from './constants/notificationMessage';
 import { JoinUserEventRequest } from './dtos/requests/join-user-event-request';
-import { LeaveUserEventRequest } from "./dtos/requests/leave-user-event-request";
+import { LeaveUserEventRequest } from './dtos/requests/leave-user-event-request';
+import { MessageResponse } from './dtos/responses/message-response';
+import { CreateFileMessageRequest } from './dtos/requests/create-file-message-request';
 
 @WebSocketGateway({
   cors: {
@@ -31,20 +33,45 @@ export class ChatGateway {
   users: Set<string> = new Set<string>();
 
   @SubscribeMessage(SocketEvent.sendMessage)
-  @UsePipes(new ValidationPipe())
   async handleNewMessage(
     @ConnectedSocket() client: Socket,
     @MessageBody() request: CreateChatMessageRequest,
   ): Promise<void> {
+    console.log(`handleMessage: ${request}`);
     const roomId = request.roomId;
-    const createChatMessageResponse = await this.service.create(
-      request.message,
-      request.author,
-      <string>roomId,
-    );
-    this.server
-      .to(`room_${roomId}`)
-      .emit(SocketEvent.getMessage, JSON.stringify(createChatMessageResponse));
+    // const createChatMessageResponse = await this.service.create(
+    //   request.message,
+    //   request.author,
+    //   <string>roomId,
+    // );
+    const payload: MessageResponse = {
+      data: { message: request.message },
+      author: request.author,
+      createdAt: request.createdAt,
+      type: request.type,
+    };
+    this.server.to(`room_${roomId}`).emit(SocketEvent.getMessage, payload);
+  }
+
+  @SubscribeMessage(SocketEvent.sendFile)
+  async handleNewFile(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() request: CreateFileMessageRequest,
+  ): Promise<void> {
+    const roomId = request.roomId;
+    console.log(request);
+
+    const payload: MessageResponse = {
+      data: {
+        file: request.file,
+      },
+      author: request.author,
+      createdAt: request.createdAt,
+      type: request.type,
+    };
+
+    console.log(`handleFile: ${payload.data.file.name}`);
+    this.server.to(`room_${roomId}`).emit(SocketEvent.getFile, payload);
   }
 
   @SubscribeMessage(SocketEvent.joinRoom)
@@ -98,7 +125,7 @@ export class ChatGateway {
   ) {
     const username = request.username;
 
-    if (this.users.has(username)) return;
+    if (!this.users.has(username)) return;
 
     this.users.delete(username);
   }
